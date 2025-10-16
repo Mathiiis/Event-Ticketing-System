@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <style>
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    width: 210mm;
+    height: 297mm;
+  }
+
+  .ticket {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    background: linear-gradient(180deg, #f5f7fa 0%, #c3cfe2 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    text-align: center;
+    padding: 40px 60px;
+  }
+
+  .header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .details {
+    text-align: left;
+  }
+
+  .logo img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+  }
+
+  .qr img {
+    width: 220px;
+    height: 220px;
+  }
+
+  .ticket-code {
+    text-align: center;
+  }
+
+  .infos {
+    font-size: 32px;
+    color: #333;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .info {
+    font-size: 20px;
+    color: #333;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .info-event {
+    font-size: 32px;
+    color: #333;
+    line-height: 1.6;
+    text-align: center;
+  }
+
+  .footer {
+    font-size: 14px;
+    color: #777;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+  <div class="ticket">
+    <div class="header">
+      <div class="details">
+        <h1>{{eventName}}</h1>
+        <h2>{{participantName}}</h2>
+      </div>
+      <div class="logo">
+        <img src="{{eventLogoUrl}}" alt="Logo de l'événement {{eventName}}" />
+      </div>
+    </div>
+
+    <div class="qr">
+      <img src="{{qrCodeBase64}}" alt="QR Code" />
+    </div>
+
+    <div class="ticket-code">
+      {{ticketCode}}
+      <p>Billet n°{{ticketNumber}} / {{maxTickets}}</p>
+    </div>
+    
+
+    <div class="infos">
+      <div class="info-event">
+        📅 {{eventDate}}<br />
+        📍 {{eventLocation}}<br />
+      </div>
+      <div class="info">
+        ℹ️ {{info}}
+      </div>
+    </div>
+
+    <div class="footer">
+      Présentez ce ticket à l’entrée pour validation.<br />
+      Ce billet est personnel et non transférable.
+    </div>
+  </div>
+</body>
+</html>
