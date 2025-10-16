@@ -1,116 +1,144 @@
-# 🎟️ Event Ticketing System
+# 🎟️ Event Ticketing System (ETS)
 
-**Event Ticketing System (ETS)** est une application complète et open source pour créer, gérer et vérifier des tickets d’événements.  
-Elle permet l’inscription à des événements gratuits (et plus tard payants), la génération de QR codes, l’envoi de e-tickets par email et la vérification des tickets via une interface de scan.
+**Event Ticketing System (ETS)** est une application complète de billetterie permettant de **créer, gérer et vérifier des événements et leurs tickets**.  
+Elle inclut la **gestion des organisateurs**, la **génération de tickets avec QR code**, l’**envoi automatique des billets par e-mail**, et une **interface de vérification sécurisée** réservée aux créateurs d’événements.
 
 ---
 
 ## 🚀 Fonctionnalités principales
 
-- ✅ Création et gestion d’événements  
-- 👥 Inscription des participants  
-- 🎫 Génération de tickets uniques (code + QR code)  
-- ✉️ Envoi automatique du ticket par email  
-- 📱 Application de vérification pour les organisateurs (scan QR + validation)  
-- 💾 Base de données centralisée (utilisateurs, événements, tickets)  
-- 🔐 Architecture sécurisée et modulaire  
-- 🏠 Auto-hébergeable sur ta propre machine (Docker Ready)
+- ✅ **Authentification via Discord** (NextAuth + OAuth2)  
+- 🧑‍💼 **Création, modification et suppression d’événements** par les organisateurs  
+- 👥 **Inscription des participants** à un événement  
+- 🎟️ **Génération de tickets uniques** avec code et QR code  
+- ✉️ **Envoi automatique des e-tickets par e-mail** (via Nodemailer)  
+- 📱 **Vérification sécurisée des billets** avec scan QR code (Html5Qrcode)  
+- 🔐 **Protection d’accès** : seules les personnes connectées peuvent accéder aux zones sensibles  
+- 📊 **Statistiques en temps réel** (tickets scannés / émis)  
+- 💾 **Base de données relationnelle Prisma + PostgreSQL**  
+- ⚙️ **API intégrée à Next.js (App Router + Pages)**  
+- 🧱 **Architecture moderne, typée et modulaire (TypeScript)**  
 
 ---
 
-## 🧰 Stack technique (MVP)
+## 🧰 Stack technique
 
-| Côté | Technologie | Description |
-|------|--------------|--------------|
-| Frontend | **Next.js (React + TypeScript)** | Interface moderne et rapide |
-| Backend | **NestJS (Node.js)** | API REST + logique métier modulaire |
-| Base de données | **PostgreSQL (via Prisma ORM)** | Stockage des utilisateurs, événements et tickets |
-| Authentification | **JWT (JSON Web Token)** | Sessions sécurisées |
-| QR Code | **qrcode / qr-image** | Génération des QR codes pour les tickets |
-| Emails | **Nodemailer** | Envoi des e-tickets aux participants |
-| Conteneurisation | **Docker + Docker Compose** | Déploiement et auto-hébergement simplifiés |
+| Domaine | Technologie | Description |
+|----------|--------------|--------------|
+| Frontend | **Next.js 15 (React + TypeScript)** | Framework fullstack avec App Router |
+| Authentification | **NextAuth.js (Discord OAuth)** | Gestion sécurisée des sessions utilisateur |
+| ORM | **Prisma** | Accès et gestion des données PostgreSQL |
+| Base de données | **PostgreSQL** | Stockage persistant des utilisateurs, événements et tickets |
+| Emailing | **Nodemailer** | Envoi automatique des tickets PDF aux participants |
+| QR Codes | **html5-qrcode / qrcode** | Génération et lecture des QR codes |
+| Style | **Tailwind CSS** | Design responsive et moderne |
+| Validation | **Zod** | Validation et typage fort des environnements et entrées |
+| Environnement | **@t3-oss/env-nextjs** | Validation stricte des variables d’environnement |
+| Conteneurisation | **Docker (optionnel)** | Déploiement simplifié |
 
 ---
 
-## 🗂️ Structure du dépôt
+## 🗂️ Structure du projet
 
 ```
 event-ticketing-system/
 │
-├── frontend/         # Interface Next.js
-├── backend/          # API NestJS
-├── shared/           # Types et utilitaires partagés
-├── prisma/           # Modèles et migrations de base de données
-├── docs/             # Documentation technique
-├── docker-compose.yml
-├── .env.example
-├── .gitignore
+├── prisma/                # Schéma et migrations Prisma
+├── src/
+│   ├── app/               # Routes Next.js (App Router)
+│   │   ├── api/           # API routes (NextAuth, admin, etc.)
+│   │   └── page.tsx       # Page principale
+│   ├── pages/             # Pages classiques (admin, verify, etc.)
+│   ├── server/            # Auth, config et logique serveur
+│   ├── trpc/              # Configuration tRPC (API type-safe)
+│   └── components/        # Composants UI réutilisables
+│
+├── public/                # Assets (logos, images)
+├── .env.example           # Exemple de variables d’environnement
+├── next.config.mjs
+├── package.json
+├── tsconfig.json
 └── README.md
 ```
 
 ---
 
-## ⚙️ Installation (local)
+## ⚙️ Installation et lancement
 
-### 1. Cloner le dépôt
+### 1️⃣ Cloner le dépôt
 ```bash
 git clone https://github.com/<ton-username>/event-ticketing-system.git
 cd event-ticketing-system
 ```
 
-### 2. Lancer avec Docker
+### 2️⃣ Installer les dépendances
 ```bash
-docker-compose up --build
+npm install
 ```
 
-L’application sera accessible sur :
-- Frontend → [http://localhost:3000](http://localhost:3000)
-- Backend API → [http://localhost:4000](http://localhost:4000)
-
----
-
-## 🧑‍💻 Développement manuel (sans Docker)
-
-### Backend
+### 3️⃣ Créer ton fichier `.env`
+Copie le modèle :
 ```bash
-cd backend
-npm install
-npm run start:dev
+cp .env.example .env
 ```
 
-### Frontend
+Puis remplis les valeurs (obligatoires) :
+```env
+DATABASE_URL="postgresql://user:password@localhost:5432/ets"
+AUTH_SECRET="clé_secrète_random"
+AUTH_DISCORD_ID="ton_client_id_discord"
+AUTH_DISCORD_SECRET="ton_secret_discord"
+```
+
+### 4️⃣ Mettre à jour la base de données
 ```bash
-cd frontend
-npm install
+npx prisma migrate dev
+```
+
+### 5️⃣ Lancer le serveur de développement
+```bash
 npm run dev
 ```
 
----
-
-## 📸 Aperçu (à venir)
-Des captures d’écran et une démonstration seront ajoutées au fur et à mesure du développement.
+> Application accessible sur [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 🛠️ Prochaines étapes
-- [ ] Authentification utilisateur  
-- [ ] Création d’événements  
-- [ ] Génération de tickets + QR code  
-- [ ] Envoi d’e-tickets  
-- [ ] Interface de scan et validation  
+## 🔐 Règles d’accès
+
+| Page | Accès | Description |
+|------|--------|-------------|
+| `/` | Public | Accueil (liste d’événements ou contenu à venir) |
+| `/admin/events` | 🔒 Authentifié | Gestion complète des événements (CRUD) |
+| `/events/[id]/register` | Public | Inscription à un événement |
+| `/verify` | 🔒 Créateur d’événement | Scanner et vérifier les billets de son propre événement |
 
 ---
 
-## 🤝 Contribution
-Les contributions sont les bienvenues !  
-Forke le projet, crée une branche et ouvre une pull request.
+## 📊 Statistiques organisateur
+
+- Affiche en temps réel :  
+  > 🎟️ `X billets validés / Y émis` pour chaque événement.  
+- Actualisation automatique après chaque scan validé.
+
+---
+
+## 🛠️ Prochaines évolutions
+
+- 💰 Gestion d’événements payants (intégration Stripe)  
+- 🧾 Tableau de bord analytique (stats de participation)  
+- 🗂️ Gestion multi-organisateurs  
+- 📱 Billets Apple/Google Wallet
 
 ---
 
 ## 📜 Licence
-Ce projet est distribué sous la licence **MIT** — voir le fichier [LICENSE](./LICENSE) pour plus de détails.
+
+Distribué sous licence **MIT**.  
+Voir le fichier [LICENSE](./LICENSE) pour plus d’informations.
 
 ---
 
 ### 💬 À propos
-Développé avec ❤️ pour offrir une solution d’émission de tickets simple, gratuite et auto-hébergeable.
+
+Développé avec ❤️ dans le but de proposer une solution de billetterie **gratuite**, **sécurisée** et **auto-hébergeable** pour tous les organisateurs d’événements.
