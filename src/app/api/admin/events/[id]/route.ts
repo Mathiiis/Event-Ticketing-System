@@ -2,17 +2,14 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/server/auth/config";
 import { db } from "@/server/db";
 
-type RouteContext = {
-  params: {
-    id: string;
-  };
-};
-
 /**
  * ✏️ Modifier un événement
  */
-export async function PUT(request: Request, context: RouteContext) {
-  const { id } = context.params;
+export async function PUT(
+  request: Request,
+  context: { params: Record<string, string> }
+) {
+  const id = context.params.id;
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
@@ -45,8 +42,11 @@ export async function PUT(request: Request, context: RouteContext) {
 /**
  * 🗑️ Supprimer un événement
  */
-export async function DELETE(request: Request, context: RouteContext) {
-  const { id } = context.params;
+export async function DELETE(
+  request: Request,
+  context: { params: Record<string, string> }
+) {
+  const id = context.params.id;
 
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
