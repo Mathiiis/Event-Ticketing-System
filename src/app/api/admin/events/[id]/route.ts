@@ -2,26 +2,33 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/server/auth/config";
 import { db } from "@/server/db";
 
+type RouteContext = {
+  params: {
+    id: string;
+  };
+};
+
 /**
  * ✏️ Modifier un événement
  */
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id)
-    return new Response(JSON.stringify({ error: "Non autorisé" }), { status: 401 });
+export async function PUT(request: Request, context: RouteContext) {
+  const { id } = context.params;
 
-  const body = await req.json();
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) {
+    return Response.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  const body = await request.json();
   const { name, date, location, description, logoUrl, maxTickets } = body;
 
-  const event = await db.event.findUnique({
-    where: { id: params.id },
-  });
-
-  if (!event || event.createdById !== session.user.id)
-    return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403 });
+  const event = await db.event.findUnique({ where: { id } });
+  if (!event || event.createdById !== session.user.id) {
+    return Response.json({ error: "Accès refusé" }, { status: 403 });
+  }
 
   const updated = await db.event.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       name,
       date: date ? new Date(date) : event.date,
@@ -38,26 +45,24 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 /**
  * 🗑️ Supprimer un événement
  */
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, context: RouteContext) {
+  const { id } = context.params;
+
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id)
-    return new Response(JSON.stringify({ error: "Non autorisé" }), { status: 401 });
+  if (!session?.user?.id) {
+    return Response.json({ error: "Non autorisé" }, { status: 401 });
+  }
 
-  const event = await db.event.findUnique({
-    where: { id: params.id },
-  });
-
+  const event = await db.event.findUnique({ where: { id } });
   if (!event) {
-    return new Response(JSON.stringify({ error: "Événement introuvable" }), { status: 404 });
+    return Response.json({ error: "Événement introuvable" }, { status: 404 });
   }
 
   if (event.createdById !== session.user.id) {
-    return new Response(JSON.stringify({ error: "Accès refusé" }), { status: 403 });
+    return Response.json({ error: "Accès refusé" }, { status: 403 });
   }
 
-  await db.event.delete({
-    where: { id: params.id },
-  });
+  await db.event.delete({ where: { id } });
 
   return Response.json({ success: true });
 }
