@@ -5,10 +5,7 @@ import { db } from "@/server/db";
 /**
  * ✏️ Modifier un événement
  */
-export async function PUT(
-  request: Request,
-  context: { params: Record<string, string> }
-) {
+export async function PUT(request: Request, context: any) {
   const id = context.params.id;
 
   const session = await getServerSession(authOptions);
@@ -42,10 +39,7 @@ export async function PUT(
 /**
  * 🗑️ Supprimer un événement
  */
-export async function DELETE(
-  request: Request,
-  context: { params: Record<string, string> }
-) {
+export async function DELETE(request: Request, context: any) {
   const id = context.params.id;
 
   const session = await getServerSession(authOptions);

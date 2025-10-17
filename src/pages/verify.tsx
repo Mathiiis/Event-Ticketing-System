@@ -41,7 +41,10 @@ export default function VerifyTicketPage() {
       safeCreateReaderDiv();
       fetchTicketStats();
     }
-    return () => stopScanner();
+
+    return () => {
+      stopScanner();
+    };
   }, [status]);
 
   const safeCreateReaderDiv = () => {
@@ -138,7 +141,8 @@ export default function VerifyTicketPage() {
       await html5QrCode.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
-        (decodedText) => handleVerify(decodedText)
+        (decodedText) => handleVerify(decodedText),
+        (errorMessage) => console.warn("QR scan error:", errorMessage)
       );
     } catch (err) {
       console.error("Impossible de démarrer le scanner QR:", err);

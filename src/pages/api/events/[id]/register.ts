@@ -78,7 +78,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       qrCodeBase64: qrCode,
       eventLogoUrl: ticket.event.logoUrl ?? "",
       info: ticket.event.description ?? "",
-      ticketNumber: ticket.number,
+      ticketNumber: ticket.number ?? undefined,
       maxTickets: ticket.event.maxTickets ?? undefined,
     });
 
