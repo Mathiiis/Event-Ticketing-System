@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 export async function generateTicketPDF({
   name,
@@ -25,11 +26,9 @@ export async function generateTicketPDF({
   eventLogoUrl?: string;
   info?: string;
 }) {
-  // 📄 Lecture du template HTML
   const templatePath = path.resolve("src/server/templates/ticket.html");
   let html = fs.readFileSync(templatePath, "utf8");
 
-  // 🧩 Remplacement des variables dynamiques
   html = html
     .replace(/{{eventName}}/g, eventName)
     .replace(/{{participantName}}/g, name)
@@ -42,26 +41,53 @@ export async function generateTicketPDF({
     .replace(/{{ticketNumber}}/g, ticketNumber?.toString() ?? "")
     .replace(/{{maxTickets}}/g, maxTickets?.toString() ?? "");
 
-  // 🚀 Lancement de Puppeteer
-  const browser = await puppeteer.launch({
-    headless: true,
+  const isRunningOnVercel = !!process.env.VERCEL || !!process.env.AWS_REGION;
+
+  const executablePath = isRunningOnVercel
+    ? await chromium.executablePath()
+    : process.platform === "win32"
+    ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+    : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+
+  // Configuration supplémentaire pour Vercel
+  const launchOptions = {
     args: [
-      "--no-sandbox",           // ✅ utile pour hébergement (Vercel/Render)
-      "--disable-setuid-sandbox"
+      ...chromium.args,
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--single-process",
+      "--no-zygote",
     ],
-  });
+    executablePath,
+    headless: true,
+    ignoreHTTPSErrors: true,
+  };
 
-  const page = await browser.newPage();
-  await page.setContent(html, { waitUntil: "networkidle0" });
+  let browser;
+  try {
+    // Délai pour s'assurer que le binaire est prêt
+    await new Promise((res) => setTimeout(res, 300));
 
-  // 🧾 Génération du PDF
-const pdfBuffer = await page.pdf({
-  format: "A4",
-  printBackground: true,
-  margin: { top: "0", bottom: "0", left: "0", right: "0" },
-});
+    browser = await puppeteer.launch(launchOptions);
 
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
 
-  await browser.close();
-  return pdfBuffer;
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "0", bottom: "0", left: "0", right: "0" },
+    });
+
+    return pdfBuffer;
+  } catch (error) {
+    console.error("❌ Erreur Puppeteer :", error);
+    throw new Error("Erreur lors de la génération du PDF : " + (error as Error).message);
+  } finally {
+    if (browser) {
+      await browser.close().catch(() => null);
+    }
+  }
 }
