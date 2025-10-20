@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 
-
 type Event = {
   _count: { tickets: number };
   id: string;
@@ -12,6 +11,7 @@ type Event = {
   logoUrl?: string;
   image?: string;
   maxTickets?: number | null;
+  show?: boolean;
 };
 
 export default function AdminEventsPage() {
@@ -26,6 +26,7 @@ export default function AdminEventsPage() {
     logoUrl: "",
     image: "",
     maxTickets: "",
+    show: "",
   });
 
   // Charger les événements
@@ -68,6 +69,7 @@ export default function AdminEventsPage() {
         logoUrl: "",
         image: "",
         maxTickets: "",
+        show: "",
       });
       await fetchEvents();
     } else {
@@ -107,6 +109,21 @@ export default function AdminEventsPage() {
       await fetchEvents();
     } else {
       alert("Erreur lors de la suppression.");
+    }
+  };
+
+  // Basculer la visibilité d’un événement
+  const toggleVisibility = async (id: string, newShow: boolean) => {
+    const res = await fetch(`/api/admin/events/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ show: newShow }),
+    });
+
+    if (res.ok) {
+      await fetchEvents();
+    } else {
+      alert("Erreur lors de la mise à jour de la visibilité.");
     }
   };
 
@@ -343,6 +360,16 @@ export default function AdminEventsPage() {
                   >
                     Supprimer
                   </button>
+                    <button
+                      onClick={() => toggleVisibility(event.id, !event.show)}
+                      className={`px-3 py-1 text-white rounded ${
+                        event.show
+                          ? "bg-gray-500 hover:bg-gray-600"
+                          : "bg-green-600 hover:bg-green-700"
+                      }`}
+                    >
+                      {event.show ? "Masquer" : "Afficher"}
+                    </button>
                 </div>
               </li>
             ))}

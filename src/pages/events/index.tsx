@@ -10,10 +10,12 @@ type Event = {
   location?: string | null;
   logoUrl?: string | null;
   image?: string | null;
+  show?: boolean;
 };
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const events = await db.event.findMany({
+    where: { show: true },
     orderBy: { date: "asc" },
   });
 

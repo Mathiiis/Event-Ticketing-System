@@ -86,6 +86,7 @@ model Event {
   createdById String?
   createdBy   User?     @relation(fields: [createdById], references: [id])
   tickets     Ticket[]
+  show        Boolean   @default(false)
 }
 
 model Ticket {

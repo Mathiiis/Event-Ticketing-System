@@ -14,7 +14,7 @@ export async function PUT(request: Request, context: any) {
   }
 
   const body = await request.json();
-  const { name, date, location, description, logoUrl, maxTickets } = body;
+  const { name, date, location, description, logoUrl, maxTickets, show } = body;
 
   const event = await db.event.findUnique({ where: { id } });
   if (!event || event.createdById !== session.user.id) {
@@ -30,6 +30,7 @@ export async function PUT(request: Request, context: any) {
       description,
       logoUrl,
       maxTickets: maxTickets ? parseInt(maxTickets, 10) : null,
+      show,
     },
   });
 
