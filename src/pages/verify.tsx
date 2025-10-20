@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Html5Qrcode } from "html5-qrcode";
-import { useSession, signIn } from "next-auth/react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 type ScanResult = {
   code: string;
@@ -14,47 +14,41 @@ type ScanResult = {
 export default function VerifyTicketPage() {
   const { data: session, status } = useSession();
   const [scanResults, setScanResults] = useState<ScanResult[]>([]);
-  const [totalTickets, setTotalTickets] = useState<number>(0);
-  const [checkedInCount, setCheckedInCount] = useState<number>(0);
-  const [eventName, setEventName] = useState<string>("");
+  const [totalTickets, setTotalTickets] = useState(0);
+  const [checkedInCount, setCheckedInCount] = useState(0);
+  const [eventName, setEventName] = useState("");
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [lastScanTime, setLastScanTime] = useState<number>(0);
+  const [lastScanTime, setLastScanTime] = useState(0);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const readerId = "qr-reader";
+  const [lastCode, setLastCode] = useState<string | null>(null);
 
+  // Charger stats de tickets
   const fetchTicketStats = async () => {
     try {
       const res = await fetch("/api/tickets/stats");
-      if (!res.ok) return console.error("Erreur chargement stats");
+      if (!res.ok) return;
       const data = await res.json();
       setTotalTickets(data.totalTickets);
       setCheckedInCount(data.checkedInCount);
       setEventName(data.eventName);
     } catch (err) {
-      console.error("Erreur chargement statistiques :", err);
+      console.error("Erreur stats :", err);
     }
   };
 
-  useEffect(() => {
-    if (status === "authenticated") {
-      safeCreateReaderDiv();
-      fetchTicketStats();
-    }
-
-    return () => {
-      stopScanner();
-    };
-  }, [status]);
+  useEffect(() => { if (status === "authenticated") { safeCreateReaderDiv(); fetchTicketStats(); } 
+  return () => { stopScanner(); }; }, [status]);
 
   const safeCreateReaderDiv = () => {
-    const oldReader = document.getElementById(readerId);
-    if (oldReader && oldReader.parentNode) oldReader.parentNode.removeChild(oldReader);
-    const newDiv = document.createElement("div");
-    newDiv.id = readerId;
-    newDiv.className =
-      "mb-4 w-80 h-80 rounded-lg border flex items-center justify-center bg-gray-200";
-    document.getElementById("scanner-container")?.appendChild(newDiv);
+    const old = document.getElementById(readerId);
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    const div = document.createElement("div");
+    div.id = readerId;
+    div.className =
+      "mb-4 w-80 h-80 rounded-lg border flex items-center justify-center bg-gray-100 shadow-inner";
+    document.getElementById("scanner-container")?.appendChild(div);
   };
 
   const stopScanner = async () => {
@@ -62,37 +56,25 @@ export default function VerifyTicketPage() {
     if (!scanner) return;
     try {
       if (scanner.isScanning) await scanner.stop();
-    } catch {
-      /* ignore */
-    } finally {
+    } catch {}
+    finally {
       scannerRef.current = null;
       setScanning(false);
       safeCreateReaderDiv();
     }
   };
 
-  // 🔸 Nouveau state pour garder le dernier code scanné
-  const [lastCode, setLastCode] = useState<string | null>(null);
-
-  // ✅ Fonction de vérification (protégée contre le spam)
   const handleVerify = async (ticketCode: string) => {
     if (!ticketCode || loading) return;
-
-    // 🔒 Ignore si c'est le même code scanné trop vite
     const now = Date.now();
-    if (ticketCode === lastCode && now - lastScanTime < 5000) {
-      console.log("Scan ignoré (doublon ou trop rapide)");
-      return;
-    }
+    if (ticketCode === lastCode && now - lastScanTime < 5000) return;
 
     setLastCode(ticketCode);
     setLastScanTime(now);
     setLoading(true);
+    await stopScanner();
 
     try {
-      // 🔕 Stop le scanner pendant la vérif (évite les rafales)
-      await stopScanner();
-
       const res = await fetch("/api/tickets/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,25 +86,20 @@ export default function VerifyTicketPage() {
         ? new Date(data.ticket.redeemedAt).toLocaleString()
         : new Date().toLocaleString();
 
-      // ✅ Ajoute à l’historique uniquement si ce code n’est pas déjà tout en haut
-      setScanResults((prev) => {
-        if (prev[0]?.code === ticketCode) return prev;
-        return [
-          {
-            code: ticketCode,
-            participantName: data.ticket?.participant?.name ?? "Inconnu",
-            eventName: data.ticket?.event?.name ?? "Inconnu",
-            valid: data.valid ?? false,
-            message: data.message ?? "Erreur",
-            scanTime: scanDate,
-          },
-          ...prev,
-        ];
-      });
+      setScanResults((prev) => [
+        {
+          code: ticketCode,
+          participantName: data.ticket?.participant?.name ?? "Inconnu",
+          eventName: data.ticket?.event?.name ?? "Inconnu",
+          valid: data.valid ?? false,
+          message: data.message ?? "Erreur",
+          scanTime: scanDate,
+        },
+        ...prev,
+      ]);
 
       if (data.valid) setCheckedInCount((c) => c + 1);
 
-      // 🕒 Redémarre le scanner après un petit délai
       setTimeout(() => startScanner(), 2000);
     } catch (err) {
       console.error("Erreur vérification ticket:", err);
@@ -142,26 +119,22 @@ export default function VerifyTicketPage() {
         { facingMode: "environment" },
         { fps: 10, qrbox: 250 },
         (decodedText) => handleVerify(decodedText),
-        (errorMessage) => console.warn("QR scan error:", errorMessage)
+        (err) => console.warn("QR error:", err)
       );
     } catch (err) {
-      console.error("Impossible de démarrer le scanner QR:", err);
+      console.error("Impossible de démarrer le scanner:", err);
       setScanning(false);
     }
   };
 
-  // 🧠 maintenant les conditions d’affichage viennent APRÈS tous les hooks
-  if (status === "loading") {
-    return <p className="text-center mt-10">Chargement...</p>;
-  }
+  // États d'accès
+  if (status === "loading") return <p className="text-center mt-10">Chargement...</p>;
 
-  if (!session) {
+  if (!session)
     return (
       <div className="text-center mt-20">
         <h1 className="text-2xl font-semibold mb-4">🔒 Accès restreint</h1>
-        <p className="text-gray-600 mb-4">
-          Vous devez être connecté pour accéder à la vérification.
-        </p>
+        <p className="text-gray-600 mb-4">Vous devez être connecté.</p>
         <button
           onClick={() => signIn("discord")}
           className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
@@ -170,35 +143,42 @@ export default function VerifyTicketPage() {
         </button>
       </div>
     );
-  }
 
-  // 🎥 Interface principale
+  // Interface principale
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gray-100">
-      <h1 className="text-3xl font-bold mb-4">🎟️ Vérifier un billet</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-gradient-to-br from-gray-50 to-gray-200 relative">
+      <div className="absolute top-4 right-6">
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition"
+        >
+          Déconnexion
+        </button>
+      </div>
 
+      <h1 className="text-3xl font-bold mb-2 text-gray-800">Vérification des billets</h1>
       {eventName && (
-        <p className="text-gray-700 mb-4">
-          🎟️ {checkedInCount} billets validés / {totalTickets} émis <br />
-          📅 Événement : <span className="font-semibold">{eventName}</span>
+        <p className="text-gray-700 mb-6 text-center">
+          🎫 {checkedInCount} validés / {totalTickets} émis <br />
+          📅 <span className="font-semibold">{eventName}</span>
         </p>
       )}
 
       <div id="scanner-container" className="mb-4">
-        <div id={readerId} className="w-80 h-80 border rounded-lg bg-gray-200" />
+        <div id={readerId} className="w-80 h-80 border rounded-lg bg-gray-100 shadow-inner" />
       </div>
 
       {!scanning ? (
         <button
           onClick={startScanner}
-          className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 mb-4"
+          className="w-80 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition mb-4"
         >
-          🎥 Démarrer le scanner
+           Démarrer le scanner
         </button>
       ) : (
         <button
           onClick={stopScanner}
-          className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 mb-4"
+          className="w-80 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition mb-4"
         >
           ⛔ Arrêter le scanner
         </button>
@@ -206,8 +186,8 @@ export default function VerifyTicketPage() {
 
       <input
         type="text"
-        placeholder="Ou entrez le code manuellement"
-        className="border p-2 rounded w-80 text-center mb-3"
+        placeholder="Ou entrez un code manuellement"
+        className="border p-2 rounded w-80 text-center mb-3 shadow-sm"
         onKeyDown={(e) => {
           if (e.key === "Enter")
             handleVerify((e.target as HTMLInputElement).value);
@@ -221,20 +201,23 @@ export default function VerifyTicketPage() {
           )
         }
         disabled={loading}
-        className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mb-4"
+        className="w-80 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
       >
         {loading ? "Vérification..." : "Vérifier manuellement"}
       </button>
 
-      <div className="mt-6 w-96">
-        {scanResults.map((r, index) => (
+      {/* Résultats */}
+      <div className="mt-8 w-full max-w-md space-y-2">
+        {scanResults.map((r, i) => (
           <div
-            key={index}
-            className={`mb-2 p-3 rounded-lg text-center shadow ${
-              r.valid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+            key={i}
+            className={`p-3 rounded-lg text-center shadow transition transform ${
+              r.valid
+                ? "bg-green-100 text-green-700 border border-green-300"
+                : "bg-red-100 text-red-700 border border-red-300"
             }`}
           >
-            <p>{r.message}</p>
+            <p className="font-semibold">{r.message}</p>
             <p className="text-sm mt-1">
               👤 {r.participantName} <br />
               🎫 {r.code} <br />

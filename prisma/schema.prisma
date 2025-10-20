@@ -81,6 +81,7 @@ model Event {
   description String?
   location    String?
   logoUrl     String?
+  image       String?
   maxTickets  Int?
   createdById String?
   createdBy   User?     @relation(fields: [createdById], references: [id])

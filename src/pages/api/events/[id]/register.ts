@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 🔍 Vérifie si le participant existe déjà
+    // Vérifie si le participant existe déjà
     let participant = await db.participant.findUnique({
       where: { email: email as string },
     });
@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 🔎 Récupère l'événement complet
+    // Récupère l'événement complet
     const event = await db.event.findUnique({
       where: { id: eventId as string },
       include: { tickets: true },
@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: "Événement introuvable." });
     }
 
-    // ⚠️ Vérifie la limite de billets
+    // Vérifie la limite de billets
     if (event.maxTickets && event.tickets.length >= event.maxTickets) {
       return res.status(400).json({
         error: "Le nombre maximum de billets pour cet événement est atteint.",
@@ -49,15 +49,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: { eventId: eventId as string },
     });
 
-    // 🔑 Génère un code unique et un QR code
+    // Génère un code unique et un QR code
     const ticketCode = `TICKET-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
     const qrCode = await generateQRCode(ticketCode);
 
-    // 🎫 Crée le ticket
+    // Crée le ticket
     const ticket = await db.ticket.create({
       data: {
         code: ticketCode,
-        number: currentCount + 1, // ✅ numéro séquentiel
+        number: currentCount + 1,
         qrCode,
         eventId: eventId as string,
         participantId: participant.id,
@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       include: { event: true },
     });
 
-    // 🧾 Génération du PDF avec toutes les infos
+    // Génération du PDF avec toutes les infos
     const pdfBuffer = await generateTicketPDF({
       name: participant.name,
       eventName: ticket.event.name,
@@ -76,13 +76,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       location: ticket.event.location ?? "Lieu à venir",
       code: ticket.code,
       qrCodeBase64: qrCode,
-      eventLogoUrl: ticket.event.logoUrl ?? "",
+      logoUrl: event.logoUrl ?? "",
       info: ticket.event.description ?? "",
       ticketNumber: ticket.number ?? undefined,
       maxTickets: ticket.event.maxTickets ?? undefined,
     });
 
-    // 📧 Envoi du mail avec le PDF en pièce jointe
+    // Envoi du mail avec le PDF en pièce jointe
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -115,7 +115,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ],
     });
 
-    // ✅ Réponse au frontend (PDF encodé pour téléchargement)
+    // Réponse au frontend (PDF encodé pour téléchargement)
     const pdfBase64 = Buffer.from(pdfBuffer).toString("base64");
 
     return res.status(200).json({
@@ -123,7 +123,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ticket: {
         id: ticket.id,
         code: ticket.code,
-        number: ticket.number, // ✅ ajouté ici
+        number: ticket.number,
         qrCode: ticket.qrCode,
         eventName: ticket.event.name,
         eventLogoUrl: ticket.event.logoUrl ?? "",

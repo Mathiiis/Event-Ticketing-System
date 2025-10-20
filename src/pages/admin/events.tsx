@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useSession, signIn } from "next-auth/react";
+import { useSession, signIn, signOut } from "next-auth/react";
+
 
 type Event = {
   _count: { tickets: number };
@@ -9,6 +10,7 @@ type Event = {
   location?: string;
   description?: string;
   logoUrl?: string;
+  image?: string;
   maxTickets?: number | null;
 };
 
@@ -22,10 +24,11 @@ export default function AdminEventsPage() {
     location: "",
     description: "",
     logoUrl: "",
+    image: "",
     maxTickets: "",
   });
 
-  // 🕒 Charger les événements
+  // Charger les événements
   useEffect(() => {
     if (status === "authenticated") fetchEvents();
   }, [status]);
@@ -37,7 +40,7 @@ export default function AdminEventsPage() {
     setEvents(data);
   };
 
-  // 🧾 Créer un événement
+  // Créer un événement
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -63,6 +66,7 @@ export default function AdminEventsPage() {
         location: "",
         description: "",
         logoUrl: "",
+        image: "",
         maxTickets: "",
       });
       await fetchEvents();
@@ -71,7 +75,7 @@ export default function AdminEventsPage() {
     }
   };
 
-  // ✏️ Modifier un événement
+  // Modifier un événement
   const handleEdit = async (event: Event) => {
     const newName = prompt("Nouveau nom de l’événement :", event.name);
     if (!newName) return;
@@ -90,7 +94,7 @@ export default function AdminEventsPage() {
     }
   };
 
-  // 🗑️ Supprimer un événement
+  // Supprimer un événement
   const handleDelete = async (id: string) => {
     if (!confirm("Supprimer cet événement ?")) return;
 
@@ -106,7 +110,7 @@ export default function AdminEventsPage() {
     }
   };
 
-  // 🕒 Gestion des états de session
+  // Gestion des états de session
   if (status === "loading") {
     return <p className="text-center mt-10">Chargement...</p>;
   }
@@ -115,9 +119,7 @@ export default function AdminEventsPage() {
     return (
       <div className="text-center mt-20">
         <h1 className="text-2xl font-semibold mb-4">🔒 Accès restreint</h1>
-        <p className="text-gray-600">
-          Vous devez être connecté pour gérer vos événements.
-        </p>
+        <p className="text-gray-600">Vous devez être connecté pour gérer vos événements.</p>
         <button
           onClick={() => signIn("discord")}
           className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
@@ -128,12 +130,23 @@ export default function AdminEventsPage() {
     );
   }
 
-  // 🧑‍💼 Interface admin
+  // Interface admin
   return (
-    <div className="max-w-3xl mx-auto mt-10 space-y-8">
-      <h1 className="text-3xl font-bold text-center">
-        ⚙️ Espace Administrateur — {session.user?.name}
-      </h1>
+    <div className="max-w-4xl mx-auto mt-10 space-y-10">
+      <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            ⚙️ Espace Administrateur
+          </h1>
+          <p className="text-gray-600">Bienvenue, {session.user?.name}</p>
+        </div>
+        <button
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+        >
+          Déconnexion
+        </button>
+      </div>
 
       {/* === Formulaire de création === */}
       <form
@@ -241,6 +254,31 @@ export default function AdminEventsPage() {
               <img
                 src={formData.logoUrl}
                 alt="Aperçu logo"
+                className="w-24 h-24 object-contain border rounded"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Image */}
+        <div>
+          <label className="block mb-1 font-medium">
+            Image de l’événement (URL)
+          </label>
+          <input
+            type="url"
+            value={formData.image}
+            onChange={(e) =>
+              setFormData({ ...formData, image: e.target.value })
+            }
+            className="w-full border rounded px-3 py-2"
+            placeholder="Ex: https://.../image.png"
+          />
+          {formData.image && (
+            <div className="mt-2 flex justify-center">
+              <img
+                src={formData.image}
+                alt="Aperçu image"
                 className="w-24 h-24 object-contain border rounded"
               />
             </div>

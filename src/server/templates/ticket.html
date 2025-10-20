@@ -1,124 +1,163 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <style>
-  @page {
-    size: A4;
-    margin: 0;
-  }
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @page {
+        size: A4;
+        margin: 0;
+      }
 
-  body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Poppins', sans-serif;
-    width: 210mm;
-    height: 297mm;
-  }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Poppins', sans-serif;
+        width: 210mm;
+        height: 297mm;
+        background: #f8fafc;
+        color: #1e293b;
+      }
 
-  .ticket {
-    width: 100%;
-    height: 100%;
-    box-sizing: border-box;
-    background: linear-gradient(180deg, #f5f7fa 0%, #c3cfe2 100%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-around;
-    text-align: center;
-    padding: 40px 60px;
-  }
+      .ticket {
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding: 40px 60px;
+      }
 
-  .header {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+      .header {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+      }
 
-  .details {
-    text-align: left;
-  }
+      .logo img {
+        width: 120px;
+        height: 120px;
+        object-fit: contain;
+        border-radius: 12px;
+        background: #f8fafc;
+        padding: 10px;
+        border: 2px solid #e2e8f0;
+      }
 
-  .logo img {
-    width: 100px;
-    height: 100px;
-    object-fit: contain;
-  }
+      .details h1 {
+        font-size: 36px;
+        margin: 0;
+        color: #1d4ed8;
+      }
 
-  .qr img {
-    width: 220px;
-    height: 220px;
-  }
+      .details h2 {
+        font-size: 20px;
+        margin: 8px 0 0;
+        color: #334155;
+      }
 
-  .ticket-code {
-    text-align: center;
-  }
+      .qr {
+        text-align: center;
+        margin: 30px 0;
+      }
 
-  .infos {
-    font-size: 32px;
-    color: #333;
-    line-height: 1.6;
-    text-align: center;
-  }
+      .qr img {
+        width: 240px;
+        height: 240px;
+        border: 6px solid #e2e8f0;
+        border-radius: 16px;
+        background: white;
+        padding: 8px;
+      }
 
-  .info {
-    font-size: 20px;
-    color: #333;
-    line-height: 1.6;
-    text-align: center;
-  }
+      .ticket-code {
+        margin-top: 20px;
+        font-size: 22px;
+        color: #1e293b;
+        text-align: center;
+        font-weight: 600;
+      }
 
-  .info-event {
-    font-size: 32px;
-    color: #333;
-    line-height: 1.6;
-    text-align: center;
-  }
+      .ticket-code p {
+        font-size: 16px;
+        color: #64748b;
+        margin: 6px 0 0;
+      }
 
-  .footer {
-    font-size: 14px;
-    color: #777;
-    margin-top: 10px;
-  }
-</style>
-</head>
-<body>
-  <div class="ticket">
-    <div class="header">
-      <div class="details">
-        <h1>{{eventName}}</h1>
-        <h2>{{participantName}}</h2>
+      .infos {
+        margin-top: 20px;
+        font-size: 18px;
+        color: #334155;
+        line-height: 1.8;
+        text-align: center;
+      }
+
+      .info-event {
+        font-size: 22px;
+        font-weight: 500;
+        margin-bottom: 10px;
+      }
+
+      .info {
+        font-size: 16px;
+        color: #475569;
+        margin-top: 8px;
+      }
+
+      .footer {
+        text-align: center;
+        font-size: 13px;
+        color: #64748b;
+        padding-top: 20px;
+        border-top: 1px dashed #cbd5e1;
+        margin-top: 40px;
+        line-height: 1.6;
+      }
+
+      .highlight {
+        color: #2563eb;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ticket">
+      <div class="header">
+        <div class="details">
+          <h1>{{eventName}}</h1>
+          <h2>Délivré à : <span class="highlight">{{participantName}}</span></h2>
+        </div>
+        <div class="logo">
+          <img src="{{logoUrl}}" alt="Logo de l'événement {{eventName}}" />
+        </div>
       </div>
-      <div class="logo">
-        <img src="{{eventLogoUrl}}" alt="Logo de l'événement {{eventName}}" />
+
+      <div class="qr">
+        <img src="{{qrCodeBase64}}" alt="QR Code du ticket" />
+      </div>
+
+      <div class="ticket-code">
+        Code : <span class="highlight">{{ticketCode}}</span>
+        <p>Billet n°{{ticketNumber}} / {{maxTickets}}</p>
+      </div>
+
+      <div class="infos">
+        <div class="info-event">
+          📅 {{eventDate}}<br />
+          📍 {{eventLocation}}<br />
+        </div>
+        <div class="info">
+          {{info}}
+        </div>
+      </div>
+
+      <div class="footer">
+        Présentez ce ticket à l’entrée pour validation.
       </div>
     </div>
-
-    <div class="qr">
-      <img src="{{qrCodeBase64}}" alt="QR Code" />
-    </div>
-
-    <div class="ticket-code">
-      {{ticketCode}}
-      <p>Billet n°{{ticketNumber}} / {{maxTickets}}</p>
-    </div>
-    
-
-    <div class="infos">
-      <div class="info-event">
-        📅 {{eventDate}}<br />
-        📍 {{eventLocation}}<br />
-      </div>
-      <div class="info">
-        ℹ️ {{info}}
-      </div>
-    </div>
-
-    <div class="footer">
-      Présentez ce ticket à l’entrée pour validation.<br />
-      Ce billet est personnel et non transférable.
-    </div>
-  </div>
-</body>
+  </body>
 </html>

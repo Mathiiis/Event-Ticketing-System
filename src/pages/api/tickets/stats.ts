@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 🔍 Récupère le dernier événement créé par l’utilisateur connecté
+    // Récupère le dernier événement créé par l’utilisateur connecté
     const event = await db.event.findFirst({
       where: { createdById: session.user.id },
       orderBy: { date: "desc" },

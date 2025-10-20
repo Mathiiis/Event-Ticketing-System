@@ -12,7 +12,7 @@ export async function generateTicketPDF({
   ticketNumber,
   maxTickets,
   qrCodeBase64,
-  eventLogoUrl,
+  logoUrl,
   info,
 }: {
   name: string;
@@ -23,12 +23,26 @@ export async function generateTicketPDF({
   ticketNumber?: number;
   maxTickets?: number;
   qrCodeBase64: string;
-  eventLogoUrl?: string;
+  logoUrl?: string;
   info?: string;
 }) {
+  // Lecture du template HTML
   const templatePath = path.resolve("src/server/templates/ticket.html");
   let html = fs.readFileSync(templatePath, "utf8");
 
+  // Gestion du logo (local → base64)
+  let logoFinal = logoUrl;
+  if (logoUrl && logoUrl.startsWith("/")) {
+    const logoPath = path.resolve("public", logoUrl.replace("/", ""));
+    if (fs.existsSync(logoPath)) {
+      const base64 = fs.readFileSync(logoPath, "base64");
+      logoFinal = `data:image/png;base64,${base64}`;
+    } else {
+      console.warn("⚠️ Logo introuvable :", logoPath);
+    }
+  }
+
+  // Remplacement des variables
   html = html
     .replace(/{{eventName}}/g, eventName)
     .replace(/{{participantName}}/g, name)
@@ -36,11 +50,14 @@ export async function generateTicketPDF({
     .replace(/{{eventLocation}}/g, location)
     .replace(/{{ticketCode}}/g, code)
     .replace(/{{qrCodeBase64}}/g, qrCodeBase64)
-    .replace(/{{eventLogoUrl}}/g, eventLogoUrl || "")
+    .replace(/{{logoUrl}}/g, logoFinal || "")
     .replace(/{{info}}/g, info || "")
     .replace(/{{ticketNumber}}/g, ticketNumber?.toString() ?? "")
     .replace(/{{maxTickets}}/g, maxTickets?.toString() ?? "");
 
+  console.log("🧾 Aperçu HTML :", html.slice(0, 300)); // ← debug temporaire
+
+  // Environnement d’exécution
   const isRunningOnVercel = !!process.env.VERCEL || !!process.env.AWS_REGION;
 
   const executablePath = isRunningOnVercel
@@ -49,7 +66,6 @@ export async function generateTicketPDF({
     ? "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
     : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-  // Configuration supplémentaire pour Vercel
   const launchOptions = {
     args: [
       ...chromium.args,
@@ -67,14 +83,17 @@ export async function generateTicketPDF({
 
   let browser;
   try {
-    // Délai pour s'assurer que le binaire est prêt
-    await new Promise((res) => setTimeout(res, 300));
-
     browser = await puppeteer.launch(launchOptions);
-
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "domcontentloaded" });
 
+    // Attente du chargement complet (images incluses)
+    await page.setContent(html, { waitUntil: ["networkidle0", "domcontentloaded"] });
+
+    // Vérifie dans la page que le logo est bien chargé
+    const hasLogo = await page.$eval("img", (img) => !!img.getAttribute("src"));
+    console.log("✅ Logo détecté dans la page :", hasLogo);
+
+    // Génération du PDF
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
@@ -86,8 +105,6 @@ export async function generateTicketPDF({
     console.error("❌ Erreur Puppeteer :", error);
     throw new Error("Erreur lors de la génération du PDF : " + (error as Error).message);
   } finally {
-    if (browser) {
-      await browser.close().catch(() => null);
-    }
+    if (browser) await browser.close().catch(() => null);
   }
 }

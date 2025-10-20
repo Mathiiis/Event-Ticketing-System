@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Méthode non autorisée." });
   }
 
-  // 🔒 Vérifie la session utilisateur
+  // Vérifie la session utilisateur
   const session = await getServerSession(req, res, authOptions);
   if (!session?.user?.id) {
     return res.status(401).json({ error: "Non autorisé. Veuillez vous connecter." });
@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 🎫 Récupère le ticket + participant + événement
+    // Récupère le ticket + participant + événement
     const ticket = await db.ticket.findUnique({
       where: { code },
       include: {
@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 🚫 Vérifie que l'utilisateur connecté est bien le créateur de l'événement
+    // Vérifie que l'utilisateur connecté est bien le créateur de l'événement
     if (ticket.event.createdById !== session.user.id) {
       return res.status(403).json({
         valid: false,
@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 🚫 Si déjà scanné
+    // Si déjà scanné
     if (ticket.checkedIn) {
       return res.status(200).json({
         valid: false,
@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // ✅ Marque le ticket comme validé
+    // Marque le ticket comme validé
     const updatedTicket = await db.ticket.update({
       where: { id: ticket.id },
       data: {
