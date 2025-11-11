@@ -99,6 +99,6 @@ model Ticket {
   createdAt     DateTime    @default(now())
   redeemedAt    DateTime?
   checkedIn     Boolean     @default(false)
-  event         Event       @relation(fields: [eventId], references: [id])
+  event         Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
   participant   Participant @relation(fields: [participantId], references: [id])
 }

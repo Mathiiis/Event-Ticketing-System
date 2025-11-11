@@ -17,7 +17,11 @@ export async function generateQRCode(ticketCode: string): Promise<string> {
  * Envoie le ticket par email au participant.
  */
 export async function sendTicketEmail(to: string, html: string) {
-  // À adapter selon ton SMTP ou ton service d'email
+  if (process.env.EMAIL_DISABLED === "true") {
+    console.log(`📪 Envoi d’e-mail désactivé.)`);
+    return;
+  }
+  
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: parseInt(process.env.SMTP_PORT || "587"),

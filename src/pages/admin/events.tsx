@@ -99,7 +99,7 @@ export default function AdminEventsPage() {
         {/* Tuile de création */}
         <Link
           href="/admin/events/new"
-          className="flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg h-64 hover:bg-gray-100 transition"
+          className="flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg h70 hover:bg-gray-100 transition"
         >
           <span className="text-5xl text-gray-500 font-light">+</span>
         </Link>
