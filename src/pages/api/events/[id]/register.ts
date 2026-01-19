@@ -4,6 +4,14 @@ import { generateQRCode } from "@/server/utils/ticket";
 import nodemailer from "nodemailer";
 import { generateTicketPDF } from "@/server/utils/generateTicketHTMLPDF";
 
+const EVENT_TIME_ZONE = process.env.EVENT_TIME_ZONE ?? "Europe/Paris";
+const formatEventDate = (date: Date) =>
+  date.toLocaleString("fr-FR", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: EVENT_TIME_ZONE,
+  });
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -70,10 +78,7 @@ export default async function handler(
     if (existingTicket) {
       // Il a déjà un ticket → on réutilise ce ticket
 
-      const readableDate = existingTicket.event.date.toLocaleString("fr-FR", {
-        dateStyle: "long",
-        timeStyle: "short",
-      });
+      const readableDate = formatEventDate(existingTicket.event.date);
 
       const pdfBuffer = await generateTicketPDF({
         name: existingTicket.participant.name,
@@ -174,10 +179,7 @@ export default async function handler(
     const pdfBuffer = await generateTicketPDF({
       name: participant.name,
       eventName: ticket.event.name,
-      date: new Date(ticket.event.date).toLocaleString("fr-FR", {
-        dateStyle: "long",
-        timeStyle: "short",
-      }),
+      date: formatEventDate(ticket.event.date),
       location: ticket.event.location ?? "Lieu à venir",
       code: ticket.code,
       qrCodeBase64: qrCode,

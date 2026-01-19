@@ -17,6 +17,7 @@ type Event = {
 export default function AdminEventsPage() {
   const { data: session, status } = useSession();
   const [events, setEvents] = useState<Event[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
 
   useEffect(() => {
     if (status === "authenticated") fetchEvents();
@@ -70,32 +71,95 @@ export default function AdminEventsPage() {
       </div>
     );
 
+  const now = Date.now();
+  const isPast = (date: string) => new Date(date).getTime() < now;
+  const pastEvents = events.filter((event) => isPast(event.date));
+  const upcomingEvents = events.filter((event) => !isPast(event.date));
+
   return (
-    
     <div className="max-w-6xl mx-auto mt-10">
-      <div className="flex items-center gap-3">
-        {session.user?.image && (
-          <img
-            src={session.user.image}
-            alt="Avatar"
-            className="w-10 h-10 rounded-full border"
-      />
-      )}
-      </div>
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">
-          ⚙️ Espace Administrateur
-        </h1>
-        <p className="text-gray-600">
-          Connecté en tant que{" "}
-          <span className="font-semibold">
-            {session.user?.name || session.user?.email || "Utilisateur inconnu"}
-          </span>
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          {session.user?.image && (
+            <img
+              src={session.user.image}
+              alt="Avatar"
+              className="w-10 h-10 rounded-full border"
+            />
+          )}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              ⚙️ Espace Administrateur
+            </h1>
+            <p className="text-gray-600">
+              Connecté en tant que{" "}
+              <span className="font-semibold">
+                {session.user?.name ||
+                  session.user?.email ||
+                  "Utilisateur inconnu"}
+              </span>
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => signOut()}
+          className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100"
+        >
+          Se déconnecter
+        </button>
       </div>
 
+      {pastEvents.length > 0 && (
+        <div className="mt-6">
+          <button
+            onClick={() => setShowArchived((prev) => !prev)}
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            {showArchived ? "Masquer" : "Afficher"} les séances passées (
+            {pastEvents.length})
+          </button>
+
+          {showArchived && (
+            <div className="mt-3 space-y-2">
+              {pastEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="flex flex-col gap-2 rounded border bg-gray-50 px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div>
+                    <div className="font-medium text-gray-800">
+                      {event.name}
+                    </div>
+                    <div className="text-gray-500">
+                      {new Date(event.date).toLocaleString("fr-FR", {
+                        dateStyle: "long",
+                        timeStyle: "short",
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link
+                      href={`/admin/events/${event.id}/edit`}
+                      className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                    >
+                      Modifier
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(event.id)}
+                      className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Grille des événements */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
         {/* Tuile de création */}
         <Link
           href="/admin/events/new"
@@ -104,7 +168,7 @@ export default function AdminEventsPage() {
           <span className="text-5xl text-gray-500 font-light">+</span>
         </Link>
 
-        {events.map((event) => (
+        {upcomingEvents.map((event) => (
           <div
             key={event.id}
             className="bg-white shadow rounded-lg overflow-hidden flex flex-col"

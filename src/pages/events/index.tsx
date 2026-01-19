@@ -14,8 +14,11 @@ type Event = {
 };
 
 export const getServerSideProps: GetServerSideProps = async () => {
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
   const events = await db.event.findMany({
-    where: { show: true },
+    where: { show: true, date: { gte: startOfToday } },
     orderBy: { date: "asc" },
   });
 

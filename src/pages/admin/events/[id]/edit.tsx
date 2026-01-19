@@ -24,6 +24,37 @@ type FormState = {
   maxTickets: string;
 };
 
+const pad2 = (value: number) => value.toString().padStart(2, "0");
+
+const getLocalDateTimeParts = (value: string) => {
+  const dateObj = new Date(value);
+
+  if (Number.isNaN(dateObj.getTime())) {
+    return { date: "", time: "" };
+  }
+
+  return {
+    date: `${dateObj.getFullYear()}-${pad2(dateObj.getMonth() + 1)}-${pad2(
+      dateObj.getDate(),
+    )}`,
+    time: `${pad2(dateObj.getHours())}:${pad2(dateObj.getMinutes())}`,
+  };
+};
+
+const formatLocalDateTime = (value: Date) => {
+  const offsetMinutes = -value.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const absMinutes = Math.abs(offsetMinutes);
+  const offsetHours = pad2(Math.floor(absMinutes / 60));
+  const offsetMins = pad2(absMinutes % 60);
+
+  return `${value.getFullYear()}-${pad2(value.getMonth() + 1)}-${pad2(
+    value.getDate(),
+  )}T${pad2(value.getHours())}:${pad2(
+    value.getMinutes(),
+  )}:00${sign}${offsetHours}:${offsetMins}`;
+};
+
 export default function EditEventPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -59,10 +90,7 @@ export default function EditEventPage() {
 
         const data: EventResponse = await res.json();
 
-        const dateObj = new Date(data.date);
-        const iso = dateObj.toISOString();
-        const [datePart, timePart] = iso.split("T");
-        const time = timePart ? timePart.slice(0, 5) : "";
+        const { date: datePart, time } = getLocalDateTimeParts(data.date);
 
         setFormData({
           name: data.name ?? "",
@@ -101,12 +129,14 @@ export default function EditEventPage() {
       return;
     }
 
+    const formattedDate = formatLocalDateTime(dateTime);
+
     const res = await fetch(`/api/admin/events/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...formData,
-        date: dateTime.toISOString(),
+        date: formattedDate,
         maxTickets: formData.maxTickets
           ? parseInt(formData.maxTickets, 10)
           : null,
