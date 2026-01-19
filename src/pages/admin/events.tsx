@@ -11,6 +11,7 @@ type Event = {
   image?: string;
   show?: boolean;
   _count: { tickets: number };
+  checkedInCount?: number;
   maxTickets?: number | null;
 };
 
@@ -136,6 +137,10 @@ export default function AdminEventsPage() {
                         timeStyle: "short",
                       })}
                     </div>
+                    <div className="text-gray-500">
+                      🎟️ {event._count.tickets} émis • ✅{" "}
+                      {event.checkedInCount ?? 0} validés
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Link
@@ -187,7 +192,13 @@ export default function AdminEventsPage() {
                     timeStyle: "short",
                   })}
                 </p>
-                {event.location && <p className="text-gray-500 mt-1">📍 {event.location}</p>}
+                <p className="text-gray-500 mt-1">
+                  🎟️ {event._count.tickets} émis • ✅{" "}
+                  {event.checkedInCount ?? 0} validés
+                </p>
+                {event.location && (
+                  <p className="text-gray-500 mt-1">📍 {event.location}</p>
+                )}
               </div>
 
               <div className="mt-4 flex gap-2">

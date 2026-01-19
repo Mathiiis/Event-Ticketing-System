@@ -15,7 +15,23 @@ export async function GET() {
     orderBy: { date: "asc" },
   });
 
-  return Response.json(events);
+  const eventIds = events.map((event) => event.id);
+  const checkedInCounts = await db.ticket.groupBy({
+    by: ["eventId"],
+    where: { eventId: { in: eventIds }, checkedIn: true },
+    _count: { _all: true },
+  });
+
+  const checkedInByEvent = new Map(
+    checkedInCounts.map((entry) => [entry.eventId, entry._count._all]),
+  );
+
+  return Response.json(
+    events.map((event) => ({
+      ...event,
+      checkedInCount: checkedInByEvent.get(event.id) ?? 0,
+    })),
+  );
 }
 
 export async function POST(req: Request) {

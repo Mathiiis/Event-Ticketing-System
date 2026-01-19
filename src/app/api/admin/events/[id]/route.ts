@@ -45,7 +45,16 @@ export async function GET(_req: Request, context: ParamsContext) {
     return Response.json({ error: "Accès refusé" }, { status: 403 });
   }
 
-  return Response.json(event);
+  const [totalTickets, checkedInCount] = await Promise.all([
+    db.ticket.count({ where: { eventId: id } }),
+    db.ticket.count({ where: { eventId: id, checkedIn: true } }),
+  ]);
+
+  return Response.json({
+    ...event,
+    totalTickets,
+    checkedInCount,
+  });
 }
 
 /**

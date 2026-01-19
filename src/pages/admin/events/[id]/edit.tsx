@@ -11,6 +11,8 @@ type EventResponse = {
   logoUrl?: string | null;
   image?: string | null;
   maxTickets?: number | null;
+  totalTickets?: number;
+  checkedInCount?: number;
 };
 
 type FormState = {
@@ -70,6 +72,7 @@ export default function EditEventPage() {
     image: "",
     maxTickets: "",
   });
+  const [stats, setStats] = useState({ totalTickets: 0, checkedInCount: 0 });
   const [error, setError] = useState("");
 
   // Charger l’événement existant
@@ -101,6 +104,10 @@ export default function EditEventPage() {
           logoUrl: data.logoUrl ?? "",
           image: data.image ?? "",
           maxTickets: data.maxTickets ? data.maxTickets.toString() : "",
+        });
+        setStats({
+          totalTickets: data.totalTickets ?? 0,
+          checkedInCount: data.checkedInCount ?? 0,
         });
       } catch (e) {
         console.error(e);
@@ -164,6 +171,17 @@ export default function EditEventPage() {
           {error}
         </p>
       )}
+
+      <div className="mb-4 rounded border bg-slate-50 px-4 py-3 text-sm text-slate-700">
+        <p>
+          Billets émis :{" "}
+          <span className="font-semibold">{stats.totalTickets}</span>
+        </p>
+        <p>
+          Billets validés :{" "}
+          <span className="font-semibold">{stats.checkedInCount}</span>
+        </p>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Nom */}
