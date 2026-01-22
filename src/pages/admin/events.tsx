@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
+import { branding } from "@/config/branding";
 
 type Event = {
   id: string;
@@ -65,7 +66,7 @@ export default function AdminEventsPage() {
         <h1 className="text-2xl font-semibold mb-4">🔒 Accès restreint</h1>
         <button
           onClick={() => signIn("discord")}
-          className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+          className="bg-[var(--brand-primary)] text-white px-4 py-2 rounded hover:bg-[var(--brand-secondary)]"
         >
           Se connecter avec Discord
         </button>
@@ -90,7 +91,7 @@ export default function AdminEventsPage() {
           )}
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              ⚙️ Espace Administrateur
+              ⚙️ Espace Administrateur — {branding.appShortName}
             </h1>
             <p className="text-gray-600">
               Connecté en tant que{" "}

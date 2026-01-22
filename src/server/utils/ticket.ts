@@ -1,5 +1,6 @@
 import QRCode from "qrcode";
 import nodemailer from "nodemailer";
+import { branding } from "@/config/branding";
 
 /**
  * Génère un QR code en Base64 à partir du code de ticket unique.
@@ -33,7 +34,7 @@ export async function sendTicketEmail(to: string, html: string) {
   });
 
   await transporter.sendMail({
-    from: `"Event Ticketing" <${process.env.SMTP_USER}>`,
+    from: `"${branding.appShortName}" <${process.env.SMTP_USER}>`,
     to,
     subject: "🎟️ Votre ticket d'événement",
     html,

@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { GetServerSideProps } from "next";
 import { db } from "@/server/db";
+import BrandHeader from "@/components/branding/BrandHeader";
+import BrandFooter from "@/components/branding/BrandFooter";
 
 type Event = {
   id: string;
@@ -40,9 +42,10 @@ export const getServerSideProps: GetServerSideProps = async () => {
 export default function EventsPage({ events }: { events: Event[] }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors">
+      <BrandHeader />
       {/* Hero Section */}
       <section className="text-center py-20 px-6">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-blue-600 to-indigo-700 bg-clip-text text-transparent">
+        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-[var(--brand-primary)] to-[var(--brand-secondary)] bg-clip-text text-transparent">
           Événements à venir
         </h1>
         <p className="text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
@@ -101,7 +104,7 @@ export default function EventsPage({ events }: { events: Event[] }) {
 
                 <Link
                   href={`/events/${event.id}/register`}
-                  className="mt-5 inline-block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition"
+                  className="mt-5 inline-block w-full text-center bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white font-medium py-2.5 rounded-lg transition"
                 >
                   S&apos;inscrire →
                 </Link>
@@ -110,6 +113,7 @@ export default function EventsPage({ events }: { events: Event[] }) {
           </ul>
         )}
       </section>
+      <BrandFooter />
     </div>
   );
 }

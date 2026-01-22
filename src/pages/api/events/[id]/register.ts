@@ -3,14 +3,20 @@ import { db } from "@/server/db";
 import { generateQRCode } from "@/server/utils/ticket";
 import nodemailer from "nodemailer";
 import { generateTicketPDF } from "@/server/utils/generateTicketHTMLPDF";
+import { branding } from "@/config/branding";
 
 const EVENT_TIME_ZONE = process.env.EVENT_TIME_ZONE ?? "Europe/Paris";
-const formatEventDate = (date: Date) =>
-  date.toLocaleString("fr-FR", {
-    dateStyle: "long",
-    timeStyle: "short",
-    timeZone: EVENT_TIME_ZONE,
-  });
+  const formatEventDate = (date: Date) =>
+    date.toLocaleString("fr-FR", {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: EVENT_TIME_ZONE,
+    });
+
+const buildEmailSignature = () => {
+  if (!branding.emailSignature) return "";
+  return `<div style=\"margin-top:24px;font-size:14px;color:#475569;\">${branding.emailSignature}</div>`;
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -105,13 +111,14 @@ export default async function handler(
         );
       } else if (transporter) {
         await transporter.sendMail({
-          from: `"Event Ticketing" <${process.env.SMTP_USER}>`,
+          from: `"${branding.appShortName}" <${process.env.SMTP_USER}>`,
           to: existingTicket.participant.email,
           subject: `🎟️ Votre ticket pour ${existingTicket.event.name}`,
           html: `
             <h1>🎟️ Votre ticket pour ${existingTicket.event.name}</h1>
             <p>Bonjour <strong>${existingTicket.participant.name}</strong>,</p>
             <p>Vous aviez déjà une inscription pour cet événement. Voici à nouveau votre billet en pièce jointe.</p>
+            ${buildEmailSignature()}
           `,
           attachments: [
             {
@@ -201,13 +208,14 @@ export default async function handler(
       );
     } else if (transporter) {
       await transporter.sendMail({
-        from: `"Event Ticketing" <${process.env.SMTP_USER}>`,
+        from: `"${branding.appShortName}" <${process.env.SMTP_USER}>`,
         to: participant.email,
         subject: `🎟️ Votre ticket pour ${ticket.event.name}`,
         html: `
           <h1>🎟️ Votre ticket pour ${ticket.event.name}</h1>
           <p>Bonjour <strong>${participant.name}</strong>,</p>
           <p>Merci pour votre inscription. Vous trouverez votre billet en pièce jointe au format PDF.</p>
+          ${buildEmailSignature()}
         `,
         attachments: [
           {

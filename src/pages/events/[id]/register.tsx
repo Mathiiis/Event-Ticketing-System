@@ -2,6 +2,9 @@
 import { useState } from "react";
 import type { GetServerSideProps } from "next";
 import { db } from "@/server/db";
+import { branding } from "@/config/branding";
+import BrandHeader from "@/components/branding/BrandHeader";
+import BrandFooter from "@/components/branding/BrandFooter";
 
 type EventPageProps = {
   event: {
@@ -134,6 +137,7 @@ export default function RegisterPage({ event }: EventPageProps) {
   return (
     <div className="min-h-screen bg-slate-50 py-10">
       <div className="max-w-4xl mx-auto px-4 space-y-8">
+        <BrandHeader />
         {/* En-tête événement */}
         <div className="bg-white shadow rounded-2xl overflow-hidden border border-slate-200">
           {event.image && (
@@ -206,7 +210,7 @@ export default function RegisterPage({ event }: EventPageProps) {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)]"
                       placeholder="Votre nom"
                       required
                     />
@@ -220,7 +224,7 @@ export default function RegisterPage({ event }: EventPageProps) {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)]"
                       placeholder="vous@example.com"
                       required
                     />
@@ -235,7 +239,7 @@ export default function RegisterPage({ event }: EventPageProps) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full inline-flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="w-full inline-flex justify-center items-center gap-2 bg-[var(--brand-primary)] hover:bg-[var(--brand-secondary)] text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {loading ? "Inscription en cours..." : "S’inscrire"}
                   </button>
@@ -299,10 +303,14 @@ export default function RegisterPage({ event }: EventPageProps) {
                 🧾 Un e-mail de confirmation avec votre ticket vous est envoyé
                 automatiquement après l’inscription.
               </li>
+              {branding.eventTermsText && (
+                <li>📌 {branding.eventTermsText}</li>
+              )}
             </ul>
           </div>
         </div>
       </div>
+      <BrandFooter />
     </div>
   );
 }
